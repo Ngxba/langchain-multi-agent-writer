@@ -15,6 +15,7 @@ from langchain_core.outputs import LLMResult
 @dataclass
 class TokenMetrics:
     """Structured token usage metrics."""
+
     total_tokens: int = 0
     prompt_tokens: int = 0
     completion_tokens: int = 0
@@ -25,6 +26,7 @@ class TokenMetrics:
 @dataclass
 class CallRecord:
     """Record of a single LLM call."""
+
     timestamp: datetime
     agent: str
     prompt_tokens: int
@@ -53,13 +55,14 @@ class AgentTokenTracker(BaseCallbackHandler):
     # GPT-4o pricing (as of January 2025, per 1K tokens)
     PRICING = {
         "gpt-4o": {
-            "input": 0.0025,      # $2.50 per 1M input tokens
-            "output": 0.01        # $10.00 per 1M output tokens
+            "input": 0.0025,  # $2.50 per 1M input tokens :contentReference[oaicite:0]{index=0}
+            "output": 0.01,  # $10.00 per 1M output tokens :contentReference[oaicite:1]{index=1}
         },
         "gpt-4o-mini": {
-            "input": 0.00015,     # $0.15 per 1M input tokens
-            "output": 0.0006      # $0.60 per 1M output tokens
-        }
+            "input": 0.00015,  # $0.15 per 1M input tokens :contentReference[oaicite:2]{index=2}
+            "output": 0.0006,  # $0.60 per 1M output tokens :contentReference[oaicite:3]{index=3}
+        },
+        "claude-sonnet-4-5-20250929": {"input": 0.003, "output": 0.006},  # (no new official change found)  # (no new official change found)
     }
 
     def __init__(self, model_name: str = "gpt-4o"):
@@ -165,7 +168,7 @@ class AgentTokenTracker(BaseCallbackHandler):
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             total_tokens=total_tokens,
-            cost=cost
+            cost=cost,
         )
         self.call_history.append(call_record)
 
@@ -229,7 +232,7 @@ class AgentTokenTracker(BaseCallbackHandler):
         report += f"Model: {self.model_name}\n"
 
         # Total summary
-        report += f"\n📊 TOTAL USAGE:\n"
+        report += "\n📊 TOTAL USAGE:\n"
         report += f"   Total Tokens:      {total.total_tokens:,}\n"
         report += f"   Prompt Tokens:     {total.prompt_tokens:,}\n"
         report += f"   Completion Tokens: {total.completion_tokens:,}\n"
@@ -238,7 +241,7 @@ class AgentTokenTracker(BaseCallbackHandler):
 
         # Per-agent breakdown
         if self.agent_metrics:
-            report += f"\n🤖 PER-AGENT BREAKDOWN:\n"
+            report += "\n🤖 PER-AGENT BREAKDOWN:\n"
             for agent_name, metrics in sorted(self.agent_metrics.items()):
                 pct = (metrics.total_tokens / total.total_tokens * 100) if total.total_tokens > 0 else 0
                 avg_tokens = metrics.total_tokens / metrics.call_count if metrics.call_count > 0 else 0
@@ -253,7 +256,7 @@ class AgentTokenTracker(BaseCallbackHandler):
 
         # Call history (if detailed)
         if detailed and self.call_history:
-            report += f"\n📜 CALL HISTORY:\n"
+            report += "\n📜 CALL HISTORY:\n"
             for i, call in enumerate(self.call_history, 1):
                 time_str = call.timestamp.strftime("%H:%M:%S")
                 report += f"\n   Call {i} [{time_str}] - {call.agent.upper()}:\n"
@@ -272,11 +275,7 @@ class AgentTokenTracker(BaseCallbackHandler):
             Compact summary string
         """
         total = self.get_total_metrics()
-        return (
-            f"💰 Tokens: {total.total_tokens:,} | "
-            f"Cost: ${total.total_cost:.4f} | "
-            f"Calls: {total.call_count}"
-        )
+        return f"💰 Tokens: {total.total_tokens:,} | Cost: ${total.total_cost:.4f} | Calls: {total.call_count}"
 
     def reset(self):
         """Reset all tracking data."""

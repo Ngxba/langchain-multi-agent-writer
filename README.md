@@ -1,115 +1,187 @@
-# BigData Newsletter Generator
+# Vietnamese Technical Newsletter - Multi-Agent System
 
-A modular multi-agent AI system built with LangChain for creating detailed, engaging BigData newsletters through specialized agent collaboration.
+> Streamlit application for multi-agent support in technical document writing
+
+A modular multi-agent AI system built with LangChain, LangGraph, and Streamlit for creating detailed, engaging Vietnamese technical newsletters through specialized agent collaboration.
+
+---
+
+## 🚀 Quick Start (3 Steps)
+
+### Step 1: Set Up Environment
+
+```bash
+# Copy the example .env file
+cp .env.sample .env
+
+# Edit .env and add your API keys
+# Required:
+# - OPENAI_API_KEY
+# - TAVILY_API_KEY
+# - ANTHROPIC_API_KEY
+```
+
+### Step 2: Install Dependencies
+
+```bash
+# Using uv (recommended)
+uv sync
+
+# Set up pre-commit hooks (optional)
+uv run pre-commit install
+uv run pre-commit run --all-files  # Run all checks
+```
+
+### Step 3: Launch the Research Swarm App
+
+```bash
+# Option 1: Use launcher script
+./run_app.sh
+
+# Option 2: Manual with uv
+uv run streamlit run research_swarm_app.py
+```
+
+The app will open at `http://localhost:8501`
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Research Swarm App](#-research-swarm-streamlit-app)
+- [Newsletter Generator](#-newsletter-generator-legacy)
+- [Architecture](#-architecture)
+- [Configuration](#-configuration)
+- [Token Tracking](#-token-tracking)
+- [Extending the System](#-extending-the-system)
+- [Troubleshooting](#-troubleshooting)
+
+---
 
 ## Overview
 
-This system uses a **collaborative agent swarm** architecture where five specialized AI agents work together to research, plan, write, edit, and visualize BigData content.
+This system provides two main applications:
 
-### 🤖 Agents
+### 1. **Research Swarm** (New - Streamlit App)
+Interactive chat interface for Vietnamese technical newsletter research with:
+- **🎯 Research Strategist**: Creates comprehensive content briefs
+- **🔬 Technical Researcher**: Gathers detailed technical information
 
-| Agent | Role | Capabilities |
-|-------|------|--------------|
-| **Researcher** | Information Gathering | Web search, knowledge base queries, statistics collection |
-| **Planner** | Content Structure | Newsletter planning, section organization, audience targeting |
-| **Writer** | Content Creation | Technical writing, BigData expertise, engaging narratives |
-| **Editor** | Quality Assurance | Review, refinement, fact-checking, style improvements |
-| **Diagram Creator** | Visualization | DrawIO diagram generation for architectures and data flows |
+### 2. **Newsletter Generator** (Original - CLI)
+Full pipeline with five specialized agents:
+- **Researcher**, **Planner**, **Writer**, **Editor**, **Diagram Creator**
 
-### ✨ Key Features
+---
 
-- **Collaborative Swarm**: Agents dynamically transfer between each other based on task needs
-- **Web Search**: Integration with Tavily for latest BigData news and trends
-- **Knowledge Base**: Curated BigData domain knowledge (Kafka, Spark, Data Lakes, etc.)
-- **Diagram Generation**: Automatic DrawIO XML generation for visualizations
-- **Token Tracking**: Per-agent token usage and cost monitoring
-- **Modular Architecture**: Highly organized codebase for easy extension
+## 🔬 Research Swarm (Streamlit App)
 
-## 📁 Project Structure
+### Features
 
+- **Interactive Chat Interface**: Step-by-step agent interaction
+- **Real-time Agent Visualization**: See which agent is active
+- **Transfer Indicators**: Watch agents hand off to each other
+- **Tool Call Tracking**: Monitor web searches and actions
+- **Export Conversations**: Download chat history as JSON
+- **Vietnamese Style Guide**: Built-in style reference
+
+### Visual Indicators
+
+| Indicator | Meaning |
+|-----------|---------|
+| 🎯 Green Badge | Research Strategist active |
+| 🔬 Blue Badge | Technical Researcher active |
+| 🔄 Green Box | Agent transfer happening |
+| 🔧 Yellow Box | Tool being used (e.g., web search) |
+| ⚙️ Tool Result | Output from a tool |
+
+### Usage Examples
+
+#### Simple Topic Request
 ```
-langchain-multi-agent-writer/
-├── agents/                      # Agent definitions
-│   ├── researcher.py           # Research specialist
-│   ├── planner.py             # Content planner
-│   ├── writer.py              # BigData writer
-│   ├── editor.py              # Quality reviewer
-│   └── diagram_creator.py     # Diagram generator
-├── tools/                      # Agent tools
-│   ├── web_search.py          # Tavily web search
-│   ├── knowledge_base.py      # Local knowledge retrieval
-│   └── diagram_tools.py       # DrawIO XML generation
-├── prompts/                    # Agent prompts
-│   └── agent_prompts.py       # System prompts for all agents
-├── workflows/                  # Orchestration
-│   └── newsletter_swarm.py    # Main swarm workflow
-├── config/                     # Configuration
-│   └── settings.py            # Settings and constants
-├── data/                       # Data files
-│   └── bigdata_knowledge.json # BigData domain knowledge
-├── outputs/                    # Generated content
-│   └── diagrams/              # DrawIO diagrams
-├── token_tracker.py           # Token tracking utility
-├── newsletter_app.py          # Main application
-└── main.py                    # Simple demo example
+Create a content brief for Apache Kafka
 ```
 
-## 🚀 Quick Start
+#### Detailed Request
+```
+Create a comprehensive content brief for a Vietnamese technical newsletter on: Redis
 
-### Prerequisites
+Context:
+- Audience: Vietnamese backend developers (intermediate level)
+- Focus on caching and real-time applications
+- Include Vietnamese or Southeast Asian examples
 
-- Python 3.11+
-- OpenAI API key
-- (Optional) Tavily API key for web search
+Please create the brief and transfer to Technical Researcher.
+```
 
-### Installation
+#### Follow-up Research
+```
+Can you search for specific performance benchmarks comparing Redis vs Memcached?
+```
 
-1. **Clone the repository**
+### Workflow
+
+```
+User Message
+    ↓
+🎯 Research Strategist
+    ├─ Analyzes topic
+    ├─ Creates content brief
+    └─ 🔄 Transfers to...
+        ↓
+🔬 Technical Researcher
+    ├─ 🔍 Searches web
+    ├─ Gathers information
+    └─ Returns research
+        ↓
+Results Displayed
+```
+
+### Example Topics
+
+Click pre-built buttons in the app:
+- Apache Flink - Stream Processing
+- Redis - In-Memory Database
+- Kubernetes - Container Orchestration
+- Apache Kafka - Message Broker
+
+### Sidebar Features
+
+- **About**: Information about the Research Swarm
+- **Agents**: View capabilities of each agent
+- **Status**: Current active agent and message count
+- **Actions**:
+  - 🔄 New Conversation - Start fresh
+  - 💾 Export Chat - Download as JSON
+- **📋 Style Reference**: Vietnamese newsletter guidelines
+
+---
+
+## 📰 Newsletter Generator (Legacy)
+
+The original full-pipeline newsletter generator with five specialized agents.
+
+### Agents
+
+| Agent | Role | Model | Temperature |
+|-------|------|-------|-------------|
+| **Researcher** | Information Gathering | GPT-4o | 0.7 |
+| **Planner** | Content Structure | GPT-4o | 0.5 |
+| **Writer** | Content Creation | GPT-4o | 0.8 |
+| **Editor** | Quality Assurance | GPT-4o | 0.3 |
+| **Diagram Creator** | Visualization | Claude Sonnet 4.5 | 0.2 |
+
+### Running the Newsletter Generator
 
 ```bash
-cd langchain-multi-agent-writer
-```
-
-2. **Set up environment**
-
-Create a `.env` file:
-
-```bash
-OPENAI_API_KEY=your_openai_api_key_here
-TAVILY_API_KEY=your_tavily_api_key_here  # Optional
-```
-
-3. **Install dependencies**
-
-Using uv (recommended):
-```bash
-uv sync
-```
-
-Or using pip:
-```bash
-pip install langchain langchain-openai langgraph langgraph-swarm python-dotenv
-```
-
-### Run the Newsletter Generator
-
-```bash
+# Generate newsletter (default topic: Apache Kafka)
 python newsletter_app.py
-```
 
-This will generate a newsletter about "Apache Kafka in 2025" by default.
-
-### Run Simple Demo
-
-To see a basic agent swarm example:
-
-```bash
+# Simple demo
 python main.py
 ```
 
-## 📖 Usage
-
-### Basic Usage
+### Programmatic Usage
 
 ```python
 from workflows.newsletter_swarm import create_newsletter_swarm
@@ -127,62 +199,148 @@ result = swarm.generate_newsletter(
 print(swarm.get_token_report())
 ```
 
-### Customizing Topics
+### Workflow
 
-Edit `newsletter_app.py` to change the topic:
-
-```python
-topic = "Your BigData Topic Here"
-
-result = swarm.generate_newsletter(
-    topic=topic,
-    additional_instructions="Any specific requirements..."
-)
+```
+User Request
+    ↓
+Planner (structures newsletter)
+    ↓
+Researcher (gathers information)
+    ↓
+Writer (drafts content)
+    ↓
+Diagram Creator (visualizations - optional)
+    ↓
+Editor (reviews and refines)
+    ↓
+Final Newsletter
 ```
 
-### Available BigData Topics
+---
 
-The knowledge base includes information about:
-- **Stream Processing**: Apache Kafka, Flink, Spark Streaming
-- **Batch Processing**: Apache Spark, Hadoop
-- **Data Storage**: Data Lakes, Delta Lake, Apache Iceberg
-- **Architectures**: Data Mesh, Lakehouse, Data Fabric
-- **Analytics**: Real-time analytics, ETL/ELT pipelines
+## 🏗️ Architecture
 
-## 🔧 Configuration
+### Project Structure
+
+```
+langchain-multi-agent-writer/
+├── agents/                      # Agent definitions
+│   ├── research_strategist.py  # Content brief creator
+│   ├── research_technical.py   # Technical researcher
+│   ├── researcher.py           # Original researcher
+│   ├── planner.py              # Content planner
+│   ├── writer.py               # Technical writer
+│   ├── editor.py               # Quality reviewer
+│   └── diagram_creator.py      # Diagram generator
+│
+├── workflows/                   # Orchestration
+│   ├── research_swarm.py       # Research Swarm workflow
+│   └── newsletter_swarm.py     # Newsletter workflow
+│
+├── tools/                       # Agent tools
+│   ├── web_search.py           # Tavily integration
+│   └── diagram_tools.py        # DrawIO generation
+│
+├── prompts/                     # Agent prompts
+│   ├── research_strategist.yaml
+│   ├── research_technical.yaml
+│   ├── style_reference.json    # Vietnamese style guide
+│   └── agent_prompts.py        # Other prompts
+│
+├── config/                      # Configuration
+│   ├── settings.py             # Agent configs
+│   ├── agent_names.py          # Name constants
+│   └── agent_handoffs.py       # Handoff configuration
+│
+├── utils/                       # Utilities
+│   ├── agent_utils.py          # Helper functions
+│   ├── output_writer.py        # File output
+│   └── streamlit_helpers.py    # Streamlit utilities
+│
+├── experimentals/               # Notebooks
+│   └── research_swarm_interactive.ipynb
+│
+├── outputs/                     # Generated content
+│   └── diagrams/               # DrawIO files
+│
+├── research_swarm_app.py       # Streamlit application
+├── newsletter_app.py           # CLI newsletter app
+├── verify_setup.py             # Setup verification
+└── token_tracker.py            # Token tracking
+```
+
+### Technology Stack
+
+- **LangChain**: Agent framework
+- **LangGraph**: Agent orchestration
+- **LangGraph Swarm**: Multi-agent coordination
+- **Streamlit**: Web interface
+- **OpenAI GPT-4o**: Main agents
+- **Claude Sonnet 4.5**: Diagram creator
+- **Tavily**: Web search
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Required in `.env`:
+
+```bash
+OPENAI_API_KEY=your_openai_key      # GPT-4o agents
+TAVILY_API_KEY=your_tavily_key      # Web search
+ANTHROPIC_API_KEY=your_claude_key   # Diagram creator
+```
 
 ### Agent Configuration
 
-Edit `config/settings.py` to customize agent behavior:
+Edit `config/settings.py`:
 
 ```python
 AGENT_CONFIG = {
-    "researcher": {
+    "research_strategist": {
         "model": "gpt-4o",
-        "temperature": 0.7  # Adjust creativity
+        "temperature": 0.5,
+        "description": "..."
+    },
+    "research_technical": {
+        "model": "gpt-4o",
+        "temperature": 0.5,
+        "description": "..."
     },
     # ... other agents
 }
 ```
 
-### Newsletter Configuration
+### Agent Handoffs
+
+Configure in `config/agent_handoffs.py`:
 
 ```python
-NEWSLETTER_CONFIG = {
-    "default_sections": [...],
-    "target_word_count": 800,
-    "tone": "professional yet engaging",
-    "audience": "data engineers and architects"
+AGENT_HANDOFFS = {
+    RESEARCH_STRATEGIST: [
+        (RESEARCH_TECHNICAL, "Transfer to Technical Researcher..."),
+    ],
+    RESEARCH_TECHNICAL: [
+        (RESEARCH_STRATEGIST, "Transfer back to Strategist..."),
+    ],
 }
 ```
 
-## 📊 Token Tracking
+### Vietnamese Style Reference
 
-The system automatically tracks:
-- Per-agent token usage
-- Cost calculation (based on GPT-4o pricing)
-- Call counts and averages
-- Session history
+Located at `prompts/style_reference.json`:
+- Language rules (Vietnamese + English technical terms)
+- Voice and tone guidelines
+- Audience profiling
+- Signature writing moves
+- Formatting standards
+
+---
+
+## 📊 Token Tracking
 
 ```python
 # Get compact summary
@@ -191,140 +349,76 @@ print(swarm.get_compact_summary())
 
 # Get detailed report
 print(swarm.get_token_report())
-# Shows per-agent breakdown, costs, and call history
 ```
 
-## 🎨 Diagram Generation
+---
 
-Agents can create DrawIO diagrams:
-
-```python
-# Data flow diagram
-create_data_flow_diagram(
-    title="Kafka Pipeline",
-    components_str="Kafka:source,Spark:process,S3:storage",
-    connections_str="Kafka->Spark:events;Spark->S3:data"
-)
-
-# Architecture diagram
-create_architecture_diagram(
-    title="Data Lakehouse",
-    layers_str="Ingestion:Kafka;Processing:Spark;Storage:Delta Lake"
-)
-```
-
-Diagrams are saved to `outputs/diagrams/` as `.drawio` files.
-
-## 🌐 Web Search
-
-The system uses Tavily for web search. If `TAVILY_API_KEY` is not set, it falls back to mock search results with realistic BigData content.
-
-To use real web search:
-1. Get API key from https://tavily.com
-2. Add to `.env`: `TAVILY_API_KEY=your_key_here`
-
-## 🧪 Extending the System
+## 🔧 Extending the System
 
 ### Adding a New Agent
 
-1. Create agent file in `agents/`:
-
 ```python
-# agents/fact_checker.py
+# agents/my_agent.py
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
-def create_fact_checker_agent():
-    model = ChatOpenAI(model="gpt-4o", tags=["fact_checker"])
-    tools = [...]  # Your tools
-    return create_react_agent(model, tools, prompt="...", name="fact_checker")
+def create_my_agent():
+    model = ChatOpenAI(model="gpt-4o", temperature=0.5, tags=["my_agent"])
+    return create_react_agent(model, tools=[...], prompt="...", name="my_agent")
 ```
 
-2. Add to swarm in `workflows/newsletter_swarm.py`
-
-3. Add handoff tools to connect with other agents
+Then add to `workflows/`, configure handoffs in `config/agent_handoffs.py`, and create prompt in `prompts/`
 
 ### Adding New Tools
-
-1. Create tool function in `tools/`:
 
 ```python
 # tools/my_tool.py
 def my_tool(query: str) -> str:
     """Tool description for the agent."""
-    # Implementation
     return result
 ```
 
-2. Add to relevant agents in `agents/`
-
-### Adding Domain Knowledge
-
-Edit `data/bigdata_knowledge.json` to add new topics, trends, or statistics.
-
-## 📝 Example Workflow
-
-A typical newsletter generation follows this flow:
-
-```
-User Request
-    ↓
-Planner (structures the newsletter)
-    ↓
-Researcher (gathers information)
-    ↓
-Writer (drafts content)
-    ↓
-Diagram Creator (creates visualizations) [optional]
-    ↓
-Editor (reviews and refines)
-    ↓
-Final Newsletter
-```
-
-Agents can transfer between each other as needed. For example:
-- Writer can request more research
-- Editor can send back to Writer for revisions
-- Any agent can request diagrams
-
-## 💡 Tips
-
-1. **Cost Management**: Monitor token usage with detailed reports
-2. **Quality**: Let agents iterate - transfers improve quality
-3. **Diagrams**: Request diagrams for complex architectures
-4. **Web Search**: Use for latest news; knowledge base for fundamentals
-5. **Customization**: Adjust temperature settings for creativity vs consistency
+---
 
 ## 🐛 Troubleshooting
 
-**Issue**: No web search results
-- **Solution**: Check `TAVILY_API_KEY` in `.env` or use mock mode
+**App won't start**
+```bash
+uv run python verify_setup.py
+uv sync
+```
 
-**Issue**: Agents not transferring
-- **Solution**: Check handoff tools are properly configured in each agent
+**Agent transfers not working**
+- Check sidebar for active agent and 🔄 transfer indicator
+- Verify handoffs in `config/agent_handoffs.py`
+- Check tool name matches in prompt (e.g., `transfer_to_research_technical` not `transfer_to_researcher_technical`)
 
-**Issue**: High token usage
-- **Solution**: Reduce temperature, simplify prompts, or limit iterations
+**"No module named..."**
+```bash
+uv run streamlit run research_swarm_app.py  # Use uv run prefix
+```
 
-## 📚 Learn More
+**Long wait times**
+- Web searches take 10-30 seconds - watch for 🔧 tool indicators
 
-- [LangChain Documentation](https://python.langchain.com/)
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
-- [Multi-Agent Systems](https://python.langchain.com/docs/use_cases/agent_teams/)
-
-## 🤝 Contributing
-
-This is a modular system designed for easy extension. Feel free to:
-- Add new agents
-- Create custom tools
-- Expand the knowledge base
-- Improve prompts
-- Add new workflows
-
-## 📄 License
-
-MIT License - feel free to use and modify for your needs.
+**No web search results**
+- Check `TAVILY_API_KEY` in `.env`
 
 ---
 
-**Built with LangChain, LangGraph, and OpenAI GPT-4o**
+## 📚 Resources
+
+- **CLAUDE.md** - Detailed architecture
+- **verify_setup.py** - Setup verification
+- **experimentals/** - Interactive notebooks
+- [LangChain](https://python.langchain.com/) | [LangGraph](https://langchain-ai.github.io/langgraph/) | [LangGraph Swarm](https://github.com/langchain-ai/langgraph-swarm)
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+**Built with LangChain, LangGraph, Streamlit, GPT-4o, and Claude Sonnet 4.5**

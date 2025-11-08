@@ -38,8 +38,7 @@ def main():
 
     # Generate newsletter
     result = swarm.generate_newsletter(
-        topic=topic,
-        additional_instructions="Focus on latest features, real-world use cases, and best practices. Include a diagram if helpful."
+        topic=topic, additional_instructions="Focus on latest features, real-world use cases, and best practices. Include a diagram if helpful."
     )
 
     # Print interactions

@@ -1,12 +1,37 @@
 [project]
 name = "langchain-multi-agent-writer"
 version = "0.1.0"
-description = "Add your description here"
+description = "Streamlit application for multi agents supporter on Technical document writer"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "langchain-anthropic>=0.3.22",
     "langchain-openai>=0.3.35",
     "langchain-tavily>=0.2.12",
+    "langgraph>=0.6.11",
     "langgraph-swarm>=0.0.14",
     "python-dotenv>=1.2.1",
+    "pyyaml>=6.0.1",
+    "streamlit>=1.40.0",
+    "langchain-core>=0.3.0",
 ]
+
+[tool.black]
+line-length = 150
+
+[tool.ruff]
+line-length = 150
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = []
+
+[tool.flake8]
+max-line-length = 150
+extend-ignore = "E203"
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true

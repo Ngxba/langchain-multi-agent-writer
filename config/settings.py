@@ -4,46 +4,71 @@ Configuration settings for the BigData Newsletter Agent Swarm.
 
 import os
 from typing import Dict, Any
+from config.agent_names import (
+    RESEARCH_STRATEGIST,
+    RESEARCH_TECHNICAL,
+    RESEARCHER,
+    PLANNER,
+    WRITER,
+    EDITOR,
+    DIAGRAM_CREATOR,
+    EIC,
+)
 
 # Model Configuration
 DEFAULT_MODEL = "gpt-4o"
 DEFAULT_MODEL_MINI = "gpt-4o-mini"  # For less critical tasks
+CLAUDE_MODEL_4_DOT_5 = "claude-sonnet-4-5-20250929"
 
 # Agent Configuration
 AGENT_CONFIG = {
-    "researcher": {
+    RESEARCHER: {
         "model": DEFAULT_MODEL,
         "temperature": 0.7,
-        "description": "BigData research specialist who gathers information from web and knowledge bases"
+        "description": "BigData research specialist who gathers information from web search",
     },
-    "planner": {
+    PLANNER: {
         "model": DEFAULT_MODEL,
         "temperature": 0.5,
-        "description": "Content planning expert who structures newsletters for maximum engagement"
+        "description": "Content planning expert who structures newsletters for maximum engagement",
     },
-    "writer": {
+    WRITER: {
         "model": DEFAULT_MODEL,
         "temperature": 0.8,
-        "description": "BigData technical writer who creates detailed, appealing content"
+        "description": "BigData technical writer who creates detailed, appealing content",
     },
-    "editor": {
+    EDITOR: {
         "model": DEFAULT_MODEL,
         "temperature": 0.3,
-        "description": "Quality review specialist who refines and improves content"
+        "description": "Quality review specialist who refines and improves content",
     },
-    "diagram_creator": {
-        "model": DEFAULT_MODEL_MINI,
+    DIAGRAM_CREATOR: {
+        "model": "claude-sonnet-4-20250514",  # Claude Sonnet 4.5 for superior diagram planning
         "temperature": 0.2,
-        "description": "Technical diagram creator for DrawIO visualizations"
-    }
+        "description": "Technical diagram creator using Claude Sonnet 4.5 for DrawIO visualizations",
+    },
+    EIC: {
+        "model": DEFAULT_MODEL,
+        "temperature": 0.5,
+        "description": "Content planning expert who structures newsletters for maximum engagement",
+    },
+    RESEARCH_TECHNICAL: {
+        "model": DEFAULT_MODEL,
+        "temperature": 0.5,
+        "description": """Gather deep, accurate technical information, real-world examples,
+        and authoritative sources that enable other agents to create an excellent Vietnamese technical newsletter.
+        The fact-finding specialist who ensures technical credibility.""",
+    },
+    RESEARCH_STRATEGIST: {
+        "model": DEFAULT_MODEL,
+        "temperature": 0.5,
+        "description": """Transform a raw topic request into a detailed, actionable content brief that
+        ensures the final newsletter will be engaging, technically accurate, and match the target Vietnamese audience's needs.""",
+    },
 }
 
 # Web Search Configuration
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 SEARCH_MAX_RESULTS = 5
-
-# Knowledge Base Configuration
-KNOWLEDGE_BASE_PATH = "data/bigdata_knowledge.json"
 
 # Output Configuration
 OUTPUT_DIR = "outputs"
@@ -61,31 +86,12 @@ NEWSLETTER_CONFIG = {
         "Deep Dive",
         "Industry Trends",
         "Best Practices",
-        "Conclusion"
+        "Conclusion",
     ],
     "target_word_count": 800,
     "tone": "professional yet engaging",
-    "audience": "data engineers and architects"
+    "audience": "data engineers and architects",
 }
-
-# BigData Topics (for knowledge base reference)
-BIGDATA_TOPICS = [
-    "Apache Kafka",
-    "Apache Spark",
-    "Apache Flink",
-    "Hadoop",
-    "Data Lakes",
-    "Data Warehouses",
-    "Stream Processing",
-    "Batch Processing",
-    "Delta Lake",
-    "Apache Iceberg",
-    "Data Mesh",
-    "Data Quality",
-    "ETL/ELT",
-    "Real-time Analytics",
-    "Data Governance"
-]
 
 
 def get_agent_config(agent_name: str) -> Dict[str, Any]:

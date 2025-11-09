@@ -5,6 +5,7 @@ description = "Streamlit application for multi agents supporter on Technical doc
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "deepagents>=0.2.5",
     "langchain==1.0.5",
     "langchain-tavily>=0.2.13",
     "langgraph>=1.0.2",
@@ -12,6 +13,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "pyyaml>=6.0.1",
     "streamlit>=1.40.0",
+    "tavily-python>=0.7.12",
 ]
 
 [tool.black]

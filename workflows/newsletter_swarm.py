@@ -7,12 +7,12 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.store.memory import InMemoryStore
 from langgraph_swarm import create_swarm
 
-from agents.researcher import create_researcher_agent
-from agents.planner import create_planner_agent
-from agents.writer import create_writer_agent
-from agents.editor import create_editor_agent
-from agents.diagram_creator import create_diagram_creator_agent
-from token_tracker import AgentTokenTracker
+from agents.archive.researcher import create_researcher_agent
+from agents.archive.planner import create_planner_agent
+from agents.archive.writer import create_writer_agent
+from agents.archive.editor import create_editor_agent
+from agents.archive.diagram_creator import create_diagram_creator_agent
+from utils.token_tracker import AgentTokenTracker
 
 
 class NewsletterSwarm:
@@ -37,7 +37,7 @@ class NewsletterSwarm:
         self.enable_token_tracking = enable_token_tracking
 
         # Create all agents
-        print("🤖 Initializing agents...")
+        print("🤖 Initializing agents.archive...")
         self.researcher = create_researcher_agent()
         self.planner = create_planner_agent()
         self.writer = create_writer_agent()

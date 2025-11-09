@@ -283,8 +283,7 @@ Context:
 - Audience: Vietnamese developers/data engineers (intermediate level)
 - Casual Vietnamese tone with technical English terms
 - Focus on real-world applications
-
-Please create the brief and transfer to Technical Researcher to gather information."""
+"""
                 send_message(example_prompt)
                 st.rerun()
 

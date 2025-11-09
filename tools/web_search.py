@@ -4,6 +4,7 @@ Web search tool for retrieving latest BigData information from the internet.
 
 import os
 from typing import Any, Optional
+from langchain.tools import tool, ToolRuntime
 
 try:
     from langchain_tavily import TavilySearch
@@ -108,7 +109,8 @@ class WebSearchTool:
 
 
 # Tool function for LangChain agents
-def search_web(query: str) -> str:
+@tool
+def search_web(query: str, runtime: ToolRuntime) -> str:
     """
     Search the web for latest BigData information, news, and trends.
 
@@ -125,5 +127,7 @@ def search_web(query: str) -> str:
     Returns:
         Formatted search results with titles, summaries, and sources
     """
+    writer = runtime.stream_writer
+    writer(f"Looking up internet data for : {query}")
     search_tool = WebSearchTool(max_results=5)
     return search_tool.search(query)

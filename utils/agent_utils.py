@@ -1,7 +1,17 @@
 import os
 import sys
+import logging
 from datetime import datetime
 from io import StringIO
+
+# Configure logger
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 
 def pretty_print_messages(result, limit_content: bool = True, content_limit: int = 500):
@@ -12,16 +22,20 @@ def pretty_print_messages(result, limit_content: bool = True, content_limit: int
         limit_content (bool): Whether to limit printed content length.
         content_limit (int): Maximum number of characters to display if limiting.
     """
-    print("\n" + "=" * 80)
-    print(f"ACTIVE AGENT: {result.get('active_agent', 'Unknown').upper()}")
-    print("=" * 80)
-
+    active_agent = result.get("active_agent", "Unknown")
     messages = result.get("messages", [])
+
+    logger.info(f"Displaying {len(messages)} messages for active agent: {active_agent}")
+
+    print("\n" + "=" * 80)
+    print(f"ACTIVE AGENT: {active_agent.upper()}")
+    print("=" * 80)
 
     for msg in messages:
         msg_type = type(msg).__name__
 
         if msg_type == "HumanMessage":
+            logger.debug(f"Processing HumanMessage: {len(msg.content)} chars")
             print("\n👤 USER:")
             content = msg.content
             if limit_content and len(content) > content_limit:
@@ -32,7 +46,10 @@ def pretty_print_messages(result, limit_content: bool = True, content_limit: int
 
         elif msg_type == "AIMessage":
             agent_name = getattr(msg, "name", "Unknown")
-            print(f"\n🤖 {agent_name.upper()}:")
+            if agent_name is None:
+                agent_name = "Unknown"
+            logger.debug(f"Processing AIMessage from agent: {agent_name}")
+            print(f"\n🤖 {str(agent_name).upper()}:")
 
             # Check for tool calls
             if hasattr(msg, "tool_calls") and msg.tool_calls:
@@ -42,8 +59,10 @@ def pretty_print_messages(result, limit_content: bool = True, content_limit: int
 
                     if "transfer" in tool_name or "handoff" in tool_name:
                         target_agent = tool_name.replace("transfer_to_", "").replace("handoff_to_", "").title()
+                        logger.info(f"Agent {agent_name} transferring to {target_agent}")
                         print(f"   🔄 Transferring to {target_agent}...")
                     else:
+                        logger.debug(f"Agent {agent_name} using tool: {tool_name}")
                         print(f"   🔧 Using tool: {tool_name}")
                         if tool_args:
                             args_str = str(tool_args)
@@ -64,6 +83,7 @@ def pretty_print_messages(result, limit_content: bool = True, content_limit: int
 
         elif msg_type == "ToolMessage":
             tool_name = getattr(msg, "name", "unknown")
+            logger.debug(f"Processing ToolMessage: {tool_name}")
             print(f"\n⚙️  TOOL RESULT ({tool_name}):")
             content = msg.content
             if limit_content and len(content) > content_limit:
@@ -87,8 +107,11 @@ def write_result_to_file(result, output_dir="outputs", filename_prefix="research
     Returns:
         str: Path to the created file
     """
+    logger.info(f"Writing results to file: output_dir={output_dir}, prefix={filename_prefix}")
+
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
+    logger.debug(f"Output directory ensured: {output_dir}")
 
     # Create filename with timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -139,4 +162,5 @@ def write_result_to_file(result, output_dir="outputs", filename_prefix="research
         f.write("=" * 80 + "\n\n")
         f.write(output)
 
+    logger.info(f"Successfully wrote results to: {filepath}")
     return filepath

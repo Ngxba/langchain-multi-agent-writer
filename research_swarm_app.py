@@ -2,6 +2,12 @@
 Research Swarm Streamlit Application
 
 Interactive chat interface for the Research Strategist and Technical Researcher swarm.
+
+This application uses the refactored multi-agent system architecture:
+- AgentFactory: Creates agents from config/agents.yaml
+- Dynamic Configuration: All agent info loaded from YAML
+- Research Swarm: Multi-agent collaboration with handoffs
+- No Hardcoded Agents: Everything driven by configuration
 """
 
 import streamlit as st
@@ -11,6 +17,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from workflows.research_swarm import create_research_swarm, get_swarm_info, load_style_reference
+from agents import AgentFactory
 
 load_dotenv()
 # Page configuration
@@ -66,6 +73,10 @@ if "app" not in st.session_state:
     st.session_state.swarm_info = get_swarm_info()
     st.session_state.style_reference = load_style_reference()
 
+    # Get default agent from config (dynamic)
+    factory = AgentFactory()
+    st.session_state.default_agent = factory.get_default_agent()
+
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())
 
@@ -73,7 +84,7 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "active_agent" not in st.session_state:
-    st.session_state.active_agent = "research_strategist"
+    st.session_state.active_agent = st.session_state.get("default_agent", "research_strategist")
 
 
 def get_config():
@@ -231,7 +242,8 @@ with st.sidebar:
     if st.button("🔄 New Conversation", use_container_width=True):
         st.session_state.thread_id = str(uuid.uuid4())
         st.session_state.messages = []
-        st.session_state.active_agent = "research_strategist"
+        # Reset to default agent from config
+        st.session_state.active_agent = st.session_state.get("default_agent", "research_strategist")
         st.rerun()
 
     if st.button("💾 Export Chat", use_container_width=True):
@@ -255,6 +267,24 @@ with st.sidebar:
     # Style Reference
     with st.expander("📋 Style Reference"):
         st.json(st.session_state.style_reference)
+
+    st.markdown("---")
+
+    # System Info
+    with st.expander("ℹ️ System Architecture"):
+        st.markdown(
+            """
+        **Refactored Multi-Agent System**
+
+        ✓ **Config-Driven**: All agents defined in `agents.yaml`
+        ✓ **AgentFactory**: Single source for agent creation
+        ✓ **Dynamic Info**: `get_swarm_info()` reads from config
+        ✓ **Type-Safe**: Pydantic validation throughout
+        ✓ **No Hardcoding**: Everything from configuration
+
+        See `notebooks/agent_system_walkthrough.ipynb` for details.
+        """
+        )
 
 
 # Main chat area

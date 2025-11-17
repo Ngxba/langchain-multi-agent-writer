@@ -3,8 +3,18 @@ Streamlit helper utilities for the Research Swarm application.
 """
 
 import json
+import logging
 from datetime import datetime
 from typing import Any, Dict, List
+
+# Configure logger
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 
 def format_message_for_display(msg: Any) -> Dict[str, Any]:
@@ -18,6 +28,7 @@ def format_message_for_display(msg: Any) -> Dict[str, Any]:
         Dictionary with formatted message data
     """
     msg_type = type(msg).__name__
+    logger.debug(f"Formatting message for display: type={msg_type}")
 
     result = {"type": msg_type, "content": getattr(msg, "content", ""), "timestamp": datetime.now().isoformat()}
 
@@ -45,6 +56,8 @@ def get_conversation_stats(messages: List[Any]) -> Dict[str, Any]:
     Returns:
         Dictionary with conversation statistics
     """
+    logger.debug(f"Calculating conversation stats for {len(messages)} messages")
+
     stats: Dict[str, Any] = {
         "total_messages": len(messages),
         "user_messages": 0,
@@ -89,6 +102,8 @@ def get_conversation_stats(messages: List[Any]) -> Dict[str, Any]:
     stats["agents_involved"] = list(stats["agents_involved"])
     stats["tools_used"] = list(stats["tools_used"])
 
+    logger.info(f"Conversation stats: {stats['total_messages']} messages, {len(stats['agents_involved'])} agents, {stats['transfers']} transfers")
+
     return stats
 
 
@@ -104,6 +119,8 @@ def export_conversation(messages: List[Any], thread_id: str, active_agent: str) 
     Returns:
         JSON string of the conversation
     """
+    logger.info(f"Exporting conversation: thread_id={thread_id}, active_agent={active_agent}")
+
     export_data = {
         "thread_id": thread_id,
         "timestamp": datetime.now().isoformat(),
@@ -112,7 +129,10 @@ def export_conversation(messages: List[Any], thread_id: str, active_agent: str) 
         "messages": [format_message_for_display(msg) for msg in messages],
     }
 
-    return json.dumps(export_data, indent=2, ensure_ascii=False)
+    json_str = json.dumps(export_data, indent=2, ensure_ascii=False)
+    logger.info(f"Exported conversation: {len(json_str)} characters")
+
+    return json_str
 
 
 def create_topic_request_template(topic: str, context: str | None = None, audience_level: str = "intermediate") -> str:

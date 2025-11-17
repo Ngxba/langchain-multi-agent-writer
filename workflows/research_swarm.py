@@ -10,14 +10,12 @@ from pathlib import Path
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph_swarm import create_swarm
 
-from agents.research_strategist import create_research_strategist_agent
-from agents.research_technical import create_research_technical_agent
-from config.agent_names import RESEARCH_STRATEGIST, RESEARCH_TECHNICAL
+from agents import AgentFactory
 
 
 def load_style_reference():
     """Load the Vietnamese technical newsletter style reference."""
-    style_path = Path(__file__).parent.parent / "prompts" / "style_reference.json"
+    style_path = Path(__file__).parent.parent / "config" / "prompts" / "style_reference.json"
     with open(style_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -31,14 +29,16 @@ def create_research_swarm():
         - Research Strategist: Creates content briefs
         - Technical Researcher: Gathers detailed information
     """
-    # Create both research agents
-    strategist_agent = create_research_strategist_agent()
-    technical_agent = create_research_technical_agent()
+    # Create agents using factory
+    # Filter handoffs to only include agents in this swarm
+    factory = AgentFactory()
+    strategist_agent = factory.create("research_strategist")
+    technical_agent = factory.create("research_technical")
 
     # Create the swarm
     swarm = create_swarm(
         agents=[strategist_agent, technical_agent],
-        default_active_agent=RESEARCH_STRATEGIST,
+        default_active_agent="research_strategist",
     )
 
     # Compile with checkpointer for conversation memory
@@ -49,41 +49,40 @@ def create_research_swarm():
 
 
 def get_swarm_info():
-    """Get information about the Research Swarm."""
+    """
+    Get information about the Research Swarm dynamically from config.
+
+    Returns:
+        Dict with swarm metadata including agents, capabilities, and workflow
+    """
+    factory = AgentFactory()
+    system_config = factory.get_system_config()
+
+    # Build agent info from config - dynamically get all agents
+    agents_info = []
+    for agent_name, agent_config in system_config.agents.items():
+        # Build capabilities from tools and handoffs
+        capabilities = []
+
+        # Add tool capabilities
+        if agent_config.tools:
+            capabilities.append(f"Has access to: {', '.join(agent_config.tools)}")
+
+        # Add handoff capabilities
+        for handoff in agent_config.handoffs:
+            capabilities.append(f"Can transfer to {handoff.to}")
+
+        agents_info.append(
+            {
+                "name": agent_config.name,
+                "role": agent_config.description,
+                "capabilities": capabilities,
+            }
+        )
+
     return {
         "name": "Research Swarm",
         "description": "Multi-agent system for Vietnamese technical newsletter research",
-        "agents": [
-            {
-                "name": RESEARCH_STRATEGIST,
-                "role": "Strategic content planning and brief creation",
-                "capabilities": [
-                    "Analyzes topic requests",
-                    "Creates comprehensive content briefs",
-                    "Plans narrative structure",
-                    "Identifies research needs",
-                    "Transfers to Technical Researcher",
-                ],
-            },
-            {
-                "name": RESEARCH_TECHNICAL,
-                "role": "Technical information gathering and research",
-                "capabilities": [
-                    "Searches for official documentation",
-                    "Finds real-world use cases",
-                    "Gathers performance data",
-                    "Locates Vietnamese/Asian examples",
-                    "Compiles research reports",
-                ],
-            },
-        ],
-        "default_agent": RESEARCH_STRATEGIST,
-        "workflow": [
-            "1. User provides topic request",
-            "2. Research Strategist analyzes and creates content brief",
-            "3. Research Strategist transfers to Technical Researcher",
-            "4. Technical Researcher executes web searches",
-            "5. Technical Researcher compiles findings",
-            "6. Final research output delivered",
-        ],
+        "agents": agents_info,
+        "default_agent": system_config.default_agent,
     }

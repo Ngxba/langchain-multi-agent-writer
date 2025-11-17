@@ -1,0 +1,68 @@
+# Unified Agent Configuration
+# This file consolidates all agent settings, handoffs, and metadata
+
+# Default agent to start workflow with
+default_agent: eic
+
+# Agent definitions
+agents:
+  eic:
+    name: eic
+    model: gpt-4o
+    temperature: 0.5
+    description: >
+      Content planning expert who structures newsletters for maximum engagement.
+      Acts as the Editor-in-Chief orchestrating the content creation workflow.
+    tools: []
+    handoffs:
+      - to: research_strategist
+        when: Transfer to Research Strategist to create a detailed content brief
+      - to: research_technical
+        when: Transfer to Technical Researcher when specific technical information is needed
+    prompt_file: eic_fake.yaml
+    tags:
+      - eic
+      - planning
+
+  research_strategist:
+    name: research_strategist
+    model: gpt-4o
+    temperature: 0.5
+    description: >
+      Transform a raw topic request into a detailed, actionable content brief that
+      ensures the final newsletter will be engaging, technically accurate, and match
+      the target Vietnamese audience's needs.
+    tools:
+      - search_web
+    handoffs:
+      - to: research_technical
+        when: Transfer to Technical Researcher to execute detailed research based on the content brief
+      # - to: eic
+      #   when: Transfer back to EIC when the content brief is complete
+    prompt_file: research_strategist_fake.yaml
+    tags:
+      - research_strategist
+      - research
+      - strategy
+
+  research_technical:
+    name: research_technical
+    model: gpt-4o
+    temperature: 0.5
+    description: >
+      Gather deep, accurate technical information, real-world examples,
+      and authoritative sources that enable other agents to create an excellent
+      Vietnamese technical newsletter. The fact-finding specialist who ensures
+      technical credibility.
+    tools:
+      - search_web
+    handoffs:
+      - to: research_strategist
+        when: Transfer back to Research Strategist if the brief needs refinement or clarification
+      # - to: eic
+      #   when: Transfer to EIC when research findings are ready for content planning
+    prompt_file: research_technical_fake.yaml
+    tags:
+      - research_technical
+      - research
+      - technical

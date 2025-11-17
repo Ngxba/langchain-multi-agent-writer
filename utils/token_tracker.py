@@ -5,11 +5,21 @@ This module provides a callback handler to track token usage per agent,
 calculate costs, and maintain session history.
 """
 
+import logging
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.outputs import LLMResult
+
+# Configure logger
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 
 @dataclass
@@ -77,6 +87,7 @@ class AgentTokenTracker(BaseCallbackHandler):
         self.agent_metrics: Dict[str, TokenMetrics] = {}
         self.call_history: List[CallRecord] = []
         self.session_start = datetime.now()
+        logger.info(f"Token tracker initialized for model: {model_name}")
 
     def _calculate_cost(self, prompt_tokens: int, completion_tokens: int) -> float:
         """
@@ -139,6 +150,7 @@ class AgentTokenTracker(BaseCallbackHandler):
             usage = response.llm_output["token_usage"]
 
         if not usage:
+            logger.debug(f"No token usage data found for agent: {agent_name}")
             return
 
         # Extract token counts
@@ -152,6 +164,7 @@ class AgentTokenTracker(BaseCallbackHandler):
         # Initialize agent metrics if needed
         if agent_name not in self.agent_metrics:
             self.agent_metrics[agent_name] = TokenMetrics()
+            logger.debug(f"Initialized metrics tracking for agent: {agent_name}")
 
         # Update agent metrics
         metrics = self.agent_metrics[agent_name]
@@ -160,6 +173,12 @@ class AgentTokenTracker(BaseCallbackHandler):
         metrics.completion_tokens += completion_tokens
         metrics.total_cost += cost
         metrics.call_count += 1
+
+        logger.info(
+            f"Agent '{agent_name}' | Tokens: {total_tokens:,} "
+            f"(prompt: {prompt_tokens:,}, completion: {completion_tokens:,}) | "
+            f"Cost: ${cost:.6f} | Call #{metrics.call_count}"
+        )
 
         # Record call history
         call_record = CallRecord(
@@ -279,6 +298,7 @@ class AgentTokenTracker(BaseCallbackHandler):
 
     def reset(self):
         """Reset all tracking data."""
+        logger.info("Resetting token tracker metrics")
         self.agent_metrics.clear()
         self.call_history.clear()
         self.session_start = datetime.now()

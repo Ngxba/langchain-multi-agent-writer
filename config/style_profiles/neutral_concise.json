@@ -1,0 +1,85 @@
+{
+  "id": "neutral-concise",
+  "name": "Neutral Concise",
+  "description": "Default professional style for Vietnamese tech newsletters. Balances depth with accessibility.",
+  "version": "1.0",
+  "created_by": "system",
+  "tags": ["default", "professional", "vietnamese"],
+
+  "voice": "neutral, confident, helpful",
+  "tone_adjectives": [
+    "professional",
+    "clear",
+    "concise",
+    "educational"
+  ],
+
+  "do_not_use": [
+    "sensational claims without evidence",
+    "vague sources (e.g., 'experts say', 'studies show')",
+    "clickbait headlines",
+    "excessive jargon without explanation",
+    "promotional language",
+    "absolute statements (always, never) without proof"
+  ],
+
+  "avoid_topics": [],
+
+  "structure": {
+    "sections": [
+      "hook",
+      "summary",
+      "sections",
+      "key-takeaways",
+      "CTA"
+    ],
+    "min_sections": 3,
+    "max_sections": 7,
+    "min_takeaways": 3,
+    "max_takeaways": 5,
+    "word_count_min": 800,
+    "word_count_max": 1200
+  },
+
+  "readability": {
+    "grade_level": 12,
+    "grade_tolerance": 1,
+    "sentence_length_min": 12,
+    "sentence_length_max": 20,
+    "max_passive_voice_percentage": 20
+  },
+
+  "citation_policy": {
+    "min_sources_per_claim": 2,
+    "require_primary_source": true,
+    "max_single_domain_percentage": 60,
+    "prefer_domains": [
+      "kafka.apache.org",
+      "spark.apache.org",
+      "flink.apache.org",
+      "databricks.com",
+      "docs.databricks.com",
+      "confluent.io",
+      "docs.confluent.io",
+      "aws.amazon.com",
+      "cloud.google.com",
+      "azure.microsoft.com",
+      "arxiv.org",
+      "github.com"
+    ]
+  },
+
+  "target_audience": "Vietnamese tech professionals including data engineers, data architects, and technical leads working with BigData technologies",
+  "audience_expertise_level": "intermediate",
+
+  "primary_language": "vi",
+  "allow_code_blocks": true,
+  "code_language_preferences": [
+    "python",
+    "sql",
+    "scala",
+    "yaml",
+    "json",
+    "bash"
+  ]
+}

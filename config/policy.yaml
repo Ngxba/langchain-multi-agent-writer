@@ -1,0 +1,289 @@
+# Policy Configuration for Newsletter Generation System
+# Phase 2 - Runtime policies externalized from code
+# All values can be overridden at runtime
+
+# =============================================================================
+# LIMITS - Hard ceilings to prevent runaway loops
+# =============================================================================
+limits:
+  # Maximum model/LLM calls per run
+  max_model_calls_per_run: 30
+
+  # Maximum tool invocations per run
+  max_tool_calls_per_run: 50
+
+  # Maximum recursion/handoff depth
+  max_depth_per_run: 8
+
+  # Maximum iterations for edit loops
+  max_iterations: 5
+
+  # Timeout for entire run (seconds)
+  run_timeout_seconds: 600
+
+
+# =============================================================================
+# HITL - Human-in-the-Loop checkpoint configuration
+# =============================================================================
+hitl:
+  # Gate web.fetch for unknown/untrusted domains
+  gate_web_fetch_unknown_domain: true
+
+  # Gate plagiarism scan when using external API
+  gate_plagiarism_external: true
+
+  # Gate publish action (always, not enabled in Phase 2-3)
+  gate_publish: true
+
+  # Timeout for awaiting approval (seconds)
+  approval_timeout_seconds: 600
+
+  # Default decision when timeout (approve|deny|abort)
+  timeout_default_decision: "deny"
+
+  # Domains automatically approved (high trust)
+  allow_domains:
+    # Apache projects
+    - kafka.apache.org
+    - spark.apache.org
+    - flink.apache.org
+    - hadoop.apache.org
+    - hive.apache.org
+    - airflow.apache.org
+    - beam.apache.org
+    - pulsar.apache.org
+    - iceberg.apache.org
+    - parquet.apache.org
+
+    # Cloud providers
+    - aws.amazon.com
+    - docs.aws.amazon.com
+    - cloud.google.com
+    - azure.microsoft.com
+    - docs.microsoft.com
+
+    # Data platforms
+    - databricks.com
+    - docs.databricks.com
+    - confluent.io
+    - docs.confluent.io
+    - snowflake.com
+    - docs.snowflake.com
+
+    # Development
+    - github.com
+    - docs.github.com
+    - stackoverflow.com
+
+    # LangChain ecosystem
+    - langchain.com
+    - docs.langchain.com
+    - python.langchain.com
+    - js.langchain.com
+    - api.python.langchain.com
+
+    # Academic & Standards
+    - arxiv.org
+    - en.wikipedia.org
+    - developer.mozilla.org
+    - w3.org
+    - ietf.org
+
+    # Vietnamese tech
+    - viblo.asia
+    - toidicodedao.com
+
+  # Domains always denied (block list)
+  deny_domains: []
+
+  # HITL request payload template
+  request_template:
+    include_state_preview: true
+    include_suggested_decision: true
+    max_state_preview_chars: 500
+
+
+# =============================================================================
+# FALLBACK - Model fallback configuration
+# =============================================================================
+fallback:
+  # Primary model for all agents
+  primary_model: "gpt-4o"
+
+  # Secondary model when primary fails
+  secondary_model: "claude-sonnet-4-5-20250929"
+
+  # Conditions to trigger fallback
+  use_on_rate_limit: true
+  use_on_timeout: true
+  use_on_error: true
+
+  # Maximum retries before fallback
+  max_retries_before_fallback: 2
+
+  # Record fallback usage in state
+  record_fallback_usage: true
+
+
+# =============================================================================
+# RETRY - Tool retry configuration
+# =============================================================================
+retry:
+  # Maximum retry attempts per tool call
+  max_retries: 3
+
+  # Base delay for exponential backoff (seconds)
+  base_delay_seconds: 1.0
+
+  # Maximum delay cap (seconds)
+  max_delay_seconds: 30.0
+
+  # Exponential multiplier
+  exponential_base: 2.0
+
+  # Errors that trigger retry
+  retryable_errors:
+    - "TimeoutError"
+    - "ConnectionError"
+    - "HTTPError"
+    - "RateLimitError"
+    - "ServiceUnavailable"
+    - "BadGateway"
+
+
+# =============================================================================
+# PII - PII redaction configuration
+# =============================================================================
+pii:
+  # Enable PII redaction
+  enabled: true
+
+  # Patterns to redact (name: replacement)
+  patterns:
+    email: "[EMAIL_REDACTED]"
+    phone_vn: "[PHONE_REDACTED]"
+    phone_intl: "[PHONE_REDACTED]"
+    ssn: "[SSN_REDACTED]"
+    credit_card: "[CC_REDACTED]"
+    ip_address: "[IP_REDACTED]"
+
+  # Fields to scan for PII
+  scan_fields:
+    - "draft"
+    - "draft_md"
+    - "draft_html"
+    - "content"
+    - "snippet"
+
+  # Log redactions for audit
+  log_redactions: true
+
+
+# =============================================================================
+# SUMMARIZATION - Context compression configuration
+# =============================================================================
+summarization:
+  # Target context size (tokens)
+  target_context_tokens: 6000
+
+  # Trigger threshold (compress when above this)
+  trigger_threshold_tokens: 8000
+
+  # Keys to preserve during summarization (for provenance)
+  preserve_keys:
+    - claim_id
+    - source_id
+    - url
+    - title
+    - confidence
+
+  # Model for summarization (use cheaper model)
+  summarization_model: "gpt-4o-mini"
+
+  # Record summarization in state
+  record_summarization: true
+
+
+# =============================================================================
+# CITATIONS - Citation normalization configuration
+# =============================================================================
+citations:
+  # Enable canonical citation normalization
+  normalize_urls: true
+
+  # Enable deduplication
+  dedupe_by_url: true
+
+  # Tracking parameters to strip from URLs
+  strip_tracking_params:
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_content
+    - utm_term
+    - ref
+    - source
+    - fbclid
+    - gclid
+
+  # Source ID generation method (sha1|uuid|incremental)
+  source_id_method: "sha1"
+
+  # Prefer first-seen per domain for deduplication
+  prefer_first_seen: true
+
+
+# =============================================================================
+# TOOL BINDING - Tool access per department
+# =============================================================================
+tool_binding:
+  researcher:
+    allowed:
+      - web.search
+      - web.fetch      # HITL gated
+      - local.search
+      - citation.builder
+    denied: []
+
+  writer:
+    allowed:
+      - seo.readability  # Optional self-check only
+    denied:
+      - web.fetch        # Writers cannot fetch directly
+      - web.search
+
+  editor:
+    allowed:
+      - seo.readability
+      - plagiarism.scan  # HITL gated if external
+      - citation.builder # For verification
+    denied:
+      - web.fetch
+
+  diagrammer:
+    allowed:
+      - drawio.generate
+      - drawio.export
+      - web.search       # For pattern research
+    denied:
+      - web.fetch
+
+
+# =============================================================================
+# LOGGING - Logging configuration
+# =============================================================================
+logging:
+  # Log level (DEBUG|INFO|WARNING|ERROR)
+  level: "INFO"
+
+  # Log middleware execution
+  log_middleware: true
+
+  # Log tool calls
+  log_tool_calls: true
+
+  # Log HITL decisions
+  log_hitl_decisions: true
+
+  # Log state transitions
+  log_state_transitions: true

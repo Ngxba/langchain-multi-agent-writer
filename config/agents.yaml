@@ -1,68 +1,349 @@
-# Unified Agent Configuration
+# Unified Agent Configuration - Phase 1 Design
 # This file consolidates all agent settings, handoffs, and metadata
+# Based on PHASE_1.MD specifications with 4 departments
 
 # Default agent to start workflow with
-default_agent: eic
+default_agent: researcher
 
-# Agent definitions
+# -----------------------------------------------------------------------------
+# Agent Definitions - Four Departments
+# -----------------------------------------------------------------------------
+# Context Slicing (who sees what):
+# - Researcher: topic, brief, requirements → produces facts[], citations[]
+# - Writer: facts[], citations[], style_profile → produces draft.md, draft.html
+# - Editor: draft.*, citations[], style_profile → produces corrected draft, issues[]
+# - Diagrammer: diagram_intents → produces .drawio xml + png
+# -----------------------------------------------------------------------------
+
 agents:
-  eic:
-    name: eic
+  # ---------------------------------------------------------------------------
+  # RESEARCHER AGENT
+  # ---------------------------------------------------------------------------
+  # Gathers deep, accurate technical information with proper citations
+  # Key Policy: >=2 independent sources per non-trivial claim; track confidence
+  # ---------------------------------------------------------------------------
+  researcher:
+    name: researcher
+    display_name: "Research Specialist"
     model: gpt-4o
-    temperature: 0.5
-    description: >
-      Content planning expert who structures newsletters for maximum engagement.
-      Acts as the Editor-in-Chief orchestrating the content creation workflow.
-    tools: []
-    handoffs:
-      - to: research_strategist
-        when: Transfer to Research Strategist to create a detailed content brief
-      - to: research_technical
-        when: Transfer to Technical Researcher when specific technical information is needed
-    prompt_file: eic_fake.yaml
-    tags:
-      - eic
-      - planning
-
-  research_strategist:
-    name: research_strategist
-    model: gpt-4o
-    temperature: 0.5
-    description: >
-      Transform a raw topic request into a detailed, actionable content brief that
-      ensures the final newsletter will be engaging, technically accurate, and match
-      the target Vietnamese audience's needs.
-    tools:
-      - search_web
-    handoffs:
-      - to: research_technical
-        when: Transfer to Technical Researcher to execute detailed research based on the content brief
-      # - to: eic
-      #   when: Transfer back to EIC when the content brief is complete
-    prompt_file: research_strategist_fake.yaml
-    tags:
-      - research_strategist
-      - research
-      - strategy
-
-  research_technical:
-    name: research_technical
-    model: gpt-4o
-    temperature: 0.5
+    temperature: 0.3  # Lower temp for accuracy
     description: >
       Gather deep, accurate technical information, real-world examples,
-      and authoritative sources that enable other agents to create an excellent
-      Vietnamese technical newsletter. The fact-finding specialist who ensures
-      technical credibility.
+      and authoritative sources. Ensures all claims have proper citations
+      with at least 2 independent sources per non-trivial claim.
+      Tracks confidence levels and verifies source independence.
+
+    # Context slice this agent receives
+    context_slice:
+      - topic
+      - brief
+      - requirements
+      - style_constraints
+      - existing_citations
+      - existing_facts
+
+    # What this agent produces
+    produces:
+      - facts
+      - citations
+      - notes.json
+
+    # Tools available to this agent
     tools:
-      - search_web
+      - web.search
+      - web.fetch        # HITL gated for unknown domains
+      - local.search
+      - citation.builder
+
+    # Handoff connections
     handoffs:
-      - to: research_strategist
-        when: Transfer back to Research Strategist if the brief needs refinement or clarification
-      # - to: eic
-      #   when: Transfer to EIC when research findings are ready for content planning
-    prompt_file: research_technical_fake.yaml
+      - to: writer
+        when: >
+          Transfer to Writer when research is complete with sufficient facts
+          and citations (>=2 independent sources per claim). Include coverage
+          summary and any gaps marked as TODO.
+      - to: editor
+        when: >
+          Transfer to Editor if existing draft needs more sources or fact-checking.
+
+    # Prompt configuration
+    prompt_file: researcher.yaml
+
+    # Tags for token tracking
     tags:
-      - research_technical
+      - researcher
       - research
-      - technical
+      - fact-gathering
+
+  # ---------------------------------------------------------------------------
+  # WRITER AGENT
+  # ---------------------------------------------------------------------------
+  # Transforms research into fluent, well-structured content
+  # Key Policy: All claims anchored to claim_id; no fabricated sources
+  # ---------------------------------------------------------------------------
+  writer:
+    name: writer
+    display_name: "Content Writer"
+    model: gpt-4o
+    temperature: 0.7  # Higher temp for creativity
+    description: >
+      Transform researched facts into fluent, engaging markdown content.
+      Every non-trivial statement must map to claim_ids via HTML comments.
+      Never fabricate facts or sources - loop back to Researcher if missing.
+      Follows STYLE_PROFILE structure and voice guidelines.
+
+    # Context slice this agent receives
+    context_slice:
+      - facts
+      - citations
+      - style_profile
+      - diagram_intents
+      - previous_draft
+      - issues_to_fix
+
+    # What this agent produces
+    produces:
+      - draft.md
+      - draft.html
+      - diagram_intents
+
+    # Tools available (minimal - writing focused)
+    tools:
+      - seo.readability  # Optional self-check
+
+    # Handoff connections
+    handoffs:
+      - to: editor
+        when: >
+          Transfer to Editor when draft is complete with all claim anchors
+          in place. Include any sections marked TODO for missing research.
+      - to: researcher
+        when: >
+          Transfer to Researcher if draft requires additional facts or sources
+          that are not available. Specify exactly what information is needed.
+      - to: diagrammer
+        when: >
+          Transfer to Diagrammer when diagram intents are defined in the outline.
+          Provide clear intent descriptions and placement hints.
+
+    prompt_file: writer.yaml
+
+    tags:
+      - writer
+      - content
+      - drafting
+
+  # ---------------------------------------------------------------------------
+  # EDITOR AGENT
+  # ---------------------------------------------------------------------------
+  # Enforces quality rubrics and finalizes content
+  # Key Policy: Enforce citations, reading-level, tone, structure
+  # ---------------------------------------------------------------------------
+  editor:
+    name: editor
+    display_name: "Quality Editor"
+    model: gpt-4o
+    temperature: 0.2  # Low temp for consistency
+    description: >
+      Enforce quality rubrics across citations, style, readability, and risk.
+      Reviews draft against STYLE_PROFILE. Determines Pass/Fail status.
+      Critical issues block publication. Major issues require resolution or HITL waiver.
+
+    # Context slice this agent receives
+    context_slice:
+      - draft_md
+      - draft_html
+      - citations
+      - style_profile
+      - iteration_count
+      - previous_issues
+
+    # What this agent produces
+    produces:
+      - corrected_draft.md
+      - corrected_draft.html
+      - issues
+      - pass_fail_status
+
+    # Tools for quality checking
+    tools:
+      - seo.readability
+      - plagiarism.scan   # HITL gated if external
+      - citation.builder  # For verification
+
+    # Handoff connections
+    handoffs:
+      - to: writer
+        when: >
+          Transfer to Writer if draft has major or critical issues that require
+          content rewriting. Include specific issues and suggested fixes.
+      - to: researcher
+        when: >
+          Transfer to Researcher if citations are insufficient or sources need
+          verification. Specify which claims lack proper sourcing.
+      - to: diagrammer
+        when: >
+          Transfer to Diagrammer if diagrams are missing or need revision.
+
+    prompt_file: editor.yaml
+
+    # Editor rubrics (used in prompt)
+    rubrics:
+      critical:
+        - citation_sufficiency: ">=2 independent sources per claim"
+        - no_contradictions: "No internal or cross-source contradictions"
+        - pii_safety: "No leaked PII, no unannotated risky advice"
+      major:
+        - style_adherence: "Matches STYLE_PROFILE structure and tone"
+        - reading_level: "Within target +/- 1 grade (FKGL)"
+      minor:
+        - typos: "Grammar and spelling"
+        - flow: "Micro-flow and transitions"
+        - tone: "Minor tone adjustments"
+
+    tags:
+      - editor
+      - quality
+      - review
+
+  # ---------------------------------------------------------------------------
+  # DIAGRAMMER AGENT
+  # ---------------------------------------------------------------------------
+  # Creates visual diagrams from intents
+  # Key Policy: Readable at 600-700px email width
+  # ---------------------------------------------------------------------------
+  diagrammer:
+    name: diagrammer
+    display_name: "Diagram Creator"
+    model: claude-sonnet-4-5-20250929  # Superior for diagram planning
+    temperature: 0.3
+    description: >
+      Translate diagram intents into DrawIO XML diagrams and export as PNG.
+      Ensures diagrams are readable at ~650px width (email-friendly).
+      Uses stable filenames for publishing. Places diagrams near referencing text.
+
+    # Context slice this agent receives
+    context_slice:
+      - diagram_intents
+      - draft_sections
+      - existing_diagrams
+
+    # What this agent produces
+    produces:
+      - diagrams
+      - diagram_pngs
+
+    # Diagram generation tools
+    tools:
+      - drawio.generate
+      - drawio.export
+      - web.search  # For researching architecture patterns
+
+    # Handoff connections
+    handoffs:
+      - to: writer
+        when: >
+          Transfer to Writer when all requested diagrams are complete.
+          Include diagram filenames and placement recommendations.
+      - to: editor
+        when: >
+          Transfer to Editor when diagrams are ready for final review.
+
+    prompt_file: diagrammer.yaml
+
+    # Diagram constraints
+    constraints:
+      max_width_px: 650
+      max_nodes_per_diagram: 15
+      label_max_chars: 30
+      supported_types:
+        - sequence
+        - mindmap
+        - swimlane
+        - block
+        - architecture
+        - data_flow
+
+    tags:
+      - diagrammer
+      - visuals
+      - drawio
+
+
+# -----------------------------------------------------------------------------
+# Global Configuration
+# -----------------------------------------------------------------------------
+
+global:
+  # Stop conditions
+  stop_conditions:
+    require_draft_md: true
+    require_editor_pass: true
+    max_iterations: 5
+
+  # HITL configuration
+  hitl:
+    gate_unknown_domains: true
+    gate_external_plagiarism: true
+    approval_timeout_seconds: 600
+    auto_approve_domains:
+      - docs.langchain.com
+      - kafka.apache.org
+      - spark.apache.org
+      - flink.apache.org
+      - arxiv.org
+      - github.com
+      - confluence.apache.org
+      - databricks.com
+      - docs.databricks.com
+    deny_domains: []
+
+  # Limits
+  limits:
+    max_model_calls_per_run: 30
+    max_tool_calls_per_run: 50
+    max_depth_per_run: 8
+
+  # Fallback configuration
+  fallback:
+    primary_model: gpt-4o
+    secondary_model: claude-sonnet-4-5-20250929
+    use_on_rate_limit: true
+    use_on_timeout: true
+
+  # Token tracking
+  token_tracking:
+    enabled: true
+    pricing:
+      gpt-4o:
+        input_per_1m: 2.50
+        output_per_1m: 10.00
+      claude-sonnet-4-5-20250929:
+        input_per_1m: 3.00
+        output_per_1m: 15.00
+
+
+# -----------------------------------------------------------------------------
+# Workflow Definition
+# -----------------------------------------------------------------------------
+
+workflow:
+  name: newsletter_generation
+  description: >
+    Multi-agent workflow for generating high-quality Vietnamese technical newsletters.
+    Agents collaborate through handoffs to research, write, edit, and visualize content.
+
+  # Execution order (default happy path)
+  default_order:
+    - researcher
+    - writer
+    - editor
+    - diagrammer
+
+  # Entry point
+  entry_agent: researcher
+
+  # Exit condition
+  exit_condition: >
+    Editor passes all critical checks AND artifacts["draft.md"] exists
+    AND required diagrams are present
